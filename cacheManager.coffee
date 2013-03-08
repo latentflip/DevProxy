@@ -18,6 +18,10 @@ class CacheManager
     if url.query.delete
       delete(@cache[url.query.delete])
 
+  shouldCache: (request) ->
+    url = parseUrl(request.url)
+    console.log("Should cache", url.host, @cache[url.host])
+
   toString: ->
     "Managing #{@cacheHost}\n\n#{JSON.stringify @cache, null, 2}"
 

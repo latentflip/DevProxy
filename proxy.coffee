@@ -3,11 +3,13 @@ sys = require "sys"
 express = require('express')
 app = express()
 CacheManager = require './cacheManager'
+AssetManager = require './assetManager'
 
 cleanHost = (host) ->
   host.replace ':80', ''
 
 cacheManager = new CacheManager('cache.com')
+assetManager = new AssetManager(cacheManager)
 
 console.log cacheManager
 
@@ -16,25 +18,27 @@ http.createServer( (request, response) ->
     cacheManager.manageRequest(request)
     response.end(cacheManager.toString())
   else
-    sys.log request.connection.remoteAddress + ": " + request.method + " " + request.url
+    assetManager.asMiddleware request, response, (request, response) ->
 
-    proxy = http.createClient(80, cleanHost(request.headers["host"]))
+      sys.log request.connection.remoteAddress + ": " + request.method + " " + request.url
 
-    proxy_request = proxy.request(request.method, request.url, request.headers)
+      proxy = http.createClient(80, cleanHost(request.headers["host"]))
 
-    proxy_request.addListener "response", (proxy_response) ->
-      proxy_response.addListener "data", (chunk) ->
-        response.write chunk, "binary"
+      proxy_request = proxy.request(request.method, request.url, request.headers)
 
-      proxy_response.addListener "end", ->
-        response.end()
+      proxy_request.addListener "response", (proxy_response) ->
+        proxy_response.addListener "data", (chunk) ->
+          response.write chunk, "binary"
 
-      response.writeHead proxy_response.statusCode, proxy_response.headers
+        proxy_response.addListener "end", ->
+          response.end()
 
-    request.addListener "data", (chunk) ->
-      proxy_request.write chunk, "binary"
+        response.writeHead proxy_response.statusCode, proxy_response.headers
 
-    request.addListener "end", ->
-      proxy_request.end()
+      request.addListener "data", (chunk) ->
+        proxy_request.write chunk, "binary"
+
+      request.addListener "end", ->
+        proxy_request.end()
 
 ).listen 8089
