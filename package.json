@@ -1,0 +1,13 @@
+{
+  "name": "DevProxy",
+  "version": "0.0.0",
+  "description": "A developer's proxy",
+  "main": "index.js",
+  "dependencies": {
+    "express": "~3.1.0",
+    "underscore": "~1.4.4"
+  },
+  "repository": "",
+  "author": "Philip Roberts",
+  "license": "MIT"
+}
